@@ -492,6 +492,14 @@ else
   fi
 fi
 
+# Metadata
+xml=$(curl --silent "http://radiko.jp/v3/program/station/weekly/${station_id}.xml")
+station_name=$(echo ${xml} | xmllint --xpath "string(/radiko/stations/station[@id='${station_id}']/name)" -)
+title=$(echo ${xml} | xmllint --xpath "string(/radiko/stations/station[@id='${station_id}']/progs/prog[@ft='${fromtime}00']/title)" -)
+pfm=$(echo ${xml} | xmllint --xpath "string(/radiko/stations/station[@id='${station_id}']/progs/prog[@ft='${fromtime}00']/pfm)" -)
+info=$(echo ${xml} | xmllint --xpath "string(/radiko/stations/station[@id='${station_id}']/progs/prog[@ft='${fromtime}00']/info)" -)
+date=$(echo ${fromtime}|sed -n "s/\([0-9]\{4\}\)\([0-9]\{2\}\)\([0-9]\{2\}\)\(.*\)/\1-\2-\3/p")
+
 # Record
 ffmpeg \
     -loglevel error \
@@ -501,6 +509,12 @@ ffmpeg \
     -acodec copy \
     -vn \
     -bsf:a aac_adtstoasc \
+    -metadata title="${title}" \
+    -metadata album="${title}" \
+    -metadata artist="${pfm}" \
+    -metadata genre="${station_name}" \
+    -metadata comment="${info}" \
+    -metadata date="${date}" \
     -y \
     "${output}"
 ret=$?
